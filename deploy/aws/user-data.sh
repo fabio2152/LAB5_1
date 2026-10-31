@@ -1,6 +1,6 @@
 #!/bin/bash
 # =====================================================================
-# User data para AWS EC2 (Amazon Linux 2023, x86_64)
+# User data para AWS EC2 (Ubuntu 24.04 o Amazon Linux 2023, x86_64)
 #
 # Se ejecuta automáticamente, como root, en el PRIMER arranque de la
 # instancia y deja la aplicación funcionando en el puerto 80:
@@ -27,14 +27,28 @@ if [ ! -f /swapfile ]; then
 fi
 
 # --- 2. Docker y Docker Compose ----------------------------------------
-dnf install -y docker
+if command -v apt-get >/dev/null; then
+  # Ubuntu: paquetes oficiales del sistema
+  # (con reintentos: un espejo de paquetes puede fallar de forma temporal)
+  export DEBIAN_FRONTEND=noninteractive
+  for intento in 1 2 3 4 5; do
+    apt-get update -y && apt-get install -y docker.io docker-compose-v2 curl && break
+    if [ "$intento" -eq 5 ]; then exit 1; fi
+    sleep 20
+  done
+else
+  # Amazon Linux 2023: Docker del sistema + plugin Compose desde GitHub
+  dnf install -y docker
+  mkdir -p /usr/local/lib/docker/cli-plugins
+  curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
+    -o /usr/local/lib/docker/cli-plugins/docker-compose
+  chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+fi
 systemctl enable --now docker
-usermod -aG docker ec2-user
 
-mkdir -p /usr/local/lib/docker/cli-plugins
-curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
-  -o /usr/local/lib/docker/cli-plugins/docker-compose
-chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+# Usuario por defecto de la AMI (ubuntu o ec2-user): puede usar docker sin sudo
+DEFAULT_USER=$(getent passwd 1000 | cut -d: -f1)
+usermod -aG docker "$DEFAULT_USER"
 docker compose version
 
 # --- 3. docker-compose.yml desde GitHub --------------------------------
@@ -58,7 +72,7 @@ SPORTSDB_SYNC_ON_STARTUP=true
 EOF
   chmod 600 .env
 fi
-chown -R ec2-user:ec2-user "$APP_DIR"
+chown -R "$DEFAULT_USER":"$DEFAULT_USER" "$APP_DIR"
 
 # --- 5. Descargar la imagen y levantar ---------------------------------
 docker compose pull
