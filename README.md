@@ -76,9 +76,9 @@ flowchart TB
     class R,E,AC datos
     class U,DB,API externo
 
-    style P fill:#f4f7ff,stroke:#1d3b8b,stroke-width:2px
-    style N fill:#f3fbf6,stroke:#1f8a4c,stroke-width:2px
-    style DA fill:#fffaf0,stroke:#b26b00,stroke-width:2px
+    style P fill:#f4f7ff,stroke:#1d3b8b,stroke-width:2px,color:#0b1e4f
+    style N fill:#f3fbf6,stroke:#1f8a4c,stroke-width:2px,color:#0f4428
+    style DA fill:#fffaf0,stroke:#b26b00,stroke-width:2px,color:#5a3600
 ```
 
 Organización en paquetes:
