@@ -164,7 +164,7 @@ sequenceDiagram
     actor U as Usuario
     participant PC as PrediccionController
     participant PRS as PrediccionService
-    participant PAR as PartidoRepository
+    participant PTR as PartidoRepository
     participant PRR as PrediccionRepository
     participant DB as PostgreSQL
 
@@ -174,10 +174,10 @@ sequenceDiagram
         PC-->>U: Formulario con errores por campo
     else Formato correcto
         PC->>PRS: registrar(NuevaPrediccion)
-        PRS->>PAR: findById(134)
-        PAR->>DB: SELECT ... FROM partido WHERE id = 134
-        DB-->>PAR: fila
-        PAR-->>PRS: Partido
+        PRS->>PTR: findById(134)
+        PTR->>DB: SELECT ... FROM partido WHERE id = 134
+        DB-->>PTR: fila
+        PTR-->>PRS: Partido
         alt Partido ya iniciado o ganador incoherente con el marcador
             PRS-->>PC: PrediccionInvalidaException
             PC-->>U: Formulario con el mensaje de error
