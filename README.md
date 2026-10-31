@@ -204,6 +204,33 @@ La forma más simple de levantar la aplicación junto con su base de datos. Solo
 | [`docker-compose.yml`](docker-compose.yml) | Servicios `app` (la aplicación) y `db` (PostgreSQL 18), con healthcheck y volumen persistente |
 | [`.env.example`](.env.example) | Plantilla de variables de entorno |
 
+### Imagen publicada en Docker Hub
+
+🐳 **[fabio2152/lab5-champions](https://hub.docker.com/r/fabio2152/lab5-champions)** (pública, `linux/amd64`)
+
+| Tag | Descripción |
+|---|---|
+| `latest` | Última versión publicada |
+| `1.0.0` | Versión 1.0.0 (Pregunta 1 completa) |
+
+```bash
+docker pull fabio2152/lab5-champions:latest
+```
+
+Para publicar una versión nueva (requiere `docker login` con la cuenta del repositorio):
+
+```bash
+docker build -t fabio2152/lab5-champions:1.0.1 -t fabio2152/lab5-champions:latest .
+```
+
+```bash
+docker push fabio2152/lab5-champions:1.0.1
+```
+
+```bash
+docker push fabio2152/lab5-champions:latest
+```
+
 ### 1. Crear el archivo `.env`
 
 **Windows (PowerShell):**
@@ -220,7 +247,15 @@ cp .env.example .env
 
 Edita `.env` y define al menos `DB_PASSWORD`. Este archivo **no se sube al repositorio** (está en `.gitignore`). Si falta la contraseña, Compose se detiene con el mensaje *"Define DB_PASSWORD en el archivo .env"*.
 
-### 2. Construir y levantar
+### 2. Levantar
+
+Con la imagen publicada en Docker Hub (no compila nada):
+
+```bash
+docker compose up -d
+```
+
+O construyendo la imagen desde el código local con el `Dockerfile`:
 
 ```bash
 docker compose up -d --build
@@ -258,7 +293,7 @@ En ejecución local se definen en la terminal. Con Docker Compose se definen en 
 | `DB_PASSWORD` | *(vacío)* | Contraseña de PostgreSQL |
 | `APP_PORT` | `8080` | Puerto HTTP de la aplicación |
 | `APP_TIMEZONE` | `America/Lima` | Zona horaria en que se muestran las fechas (en la BD se guardan en UTC) |
-| `APP_IMAGE` | `lab5-champions:local` | Solo Docker Compose: nombre de la imagen de la aplicación |
+| `APP_IMAGE` | `fabio2152/lab5-champions:latest` | Solo Docker Compose: imagen de la aplicación (Docker Hub) |
 | `SPORTSDB_API_KEY` | `123` | Clave de TheSportsDB (`123` es la clave gratuita pública) |
 | `SPORTSDB_LEAGUE_ID` | `4480` | Liga a consultar (4480 = UEFA Champions League) |
 | `SPORTSDB_SEASON` | `2026-2027` | Temporada |

@@ -2,7 +2,8 @@
 #
 # Uso:
 #   1. Copiar .env.example a .env y definir DB_PASSWORD
-#   2. docker compose up -d --build
+#   2. docker compose up -d            (usa la imagen de Docker Hub)
+#      docker compose up -d --build    (o construye la imagen desde el código)
 #   3. Abrir http://localhost:8080
 #
 # Las variables se leen del archivo .env (que no se sube al repositorio).
@@ -29,8 +30,10 @@ services:
     # Sin "ports": la base de datos solo es accesible desde la red interna de Compose.
 
   app:
+    # Imagen publicada en Docker Hub. "docker compose up" la descarga si no está en el equipo;
+    # "docker compose up --build" la construye desde el código local con el Dockerfile.
+    image: ${APP_IMAGE:-fabio2152/lab5-champions:latest}
     build: .
-    image: ${APP_IMAGE:-lab5-champions:local}
     depends_on:
       db:
         condition: service_healthy
