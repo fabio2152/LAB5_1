@@ -26,6 +26,9 @@
         </form>
     </div>
 
+    <div class="alerta alerta--exito" th:if="${mensaje}" th:text="${mensaje}">Predicción registrada</div>
+    <div class="alerta alerta--error" th:if="${error}" th:text="${error}">Error</div>
+
     <div class="vacio" th:if="${#lists.isEmpty(partidos)}">
         No hay partidos almacenados. Se cargan desde TheSportsDB al iniciar la aplicación.
     </div>
@@ -41,6 +44,7 @@
                 <th>Visitante</th>
                 <th>Estadio</th>
                 <th>Estado</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -67,6 +71,10 @@
                 <td>
                     <span class="estado" th:classappend="${p.porJugar} ? 'estado--pendiente' : 'estado--final'"
                           th:text="${p.estadoDescripcion}">Por jugar</span>
+                </td>
+                <td>
+                    <a class="boton boton--chico" th:if="${p.admitePrediccion}"
+                       th:href="@{/partidos/{id}/predicciones/nueva(id=${p.id})}">Predecir</a>
                 </td>
             </tr>
             </tbody>

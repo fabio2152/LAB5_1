@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('No encontrado')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: cabecera('')}"></header>
+
+<main class="contenedor">
+    <div class="titulo-seccion">
+        <h1>No encontrado</h1>
+    </div>
+    <div class="vacio">
+        <p th:text="${mensaje}">No existe el recurso solicitado.</p>
+        <a class="boton" th:href="@{/partidos}">Volver a partidos</a>
+    </div>
+</main>
+</body>
+</html>

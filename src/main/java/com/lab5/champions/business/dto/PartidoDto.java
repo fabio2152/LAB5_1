@@ -19,7 +19,8 @@ public record PartidoDto(
         Integer golesVisitante,
         String estado,
         String estadoDescripcion,
-        boolean porJugar) {
+        boolean porJugar,
+        boolean admitePrediccion) {
 
     public boolean tieneMarcador() {
         return golesLocal != null && golesVisitante != null;

@@ -1,6 +1,7 @@
 package com.lab5.champions.business.service;
 
 import com.lab5.champions.business.dto.PartidoDto;
+import com.lab5.champions.business.exception.PartidoNoEncontradoException;
 import com.lab5.champions.data.entity.Partido;
 import com.lab5.champions.data.external.EventoApi;
 import com.lab5.champions.data.external.TheSportsDbClient;
@@ -87,6 +88,19 @@ public class PartidoService {
         return partidoRepository.findJornadas();
     }
 
+    public PartidoDto obtenerPartido(Long id) {
+        return partidoRepository.findById(id)
+                .map(this::aDto)
+                .orElseThrow(() -> new PartidoNoEncontradoException(id));
+    }
+
+    /** Solo se puede predecir un partido que no ha comenzado (estado NS y fecha futura). */
+    static boolean admitePrediccion(Partido partido) {
+        return ESTADO_POR_JUGAR.equals(partido.getEstado())
+                && (partido.getFechaHora() == null
+                || partido.getFechaHora().isAfter(LocalDateTime.now(ZoneOffset.UTC)));
+    }
+
     private PartidoDto aDto(Partido p) {
         return new PartidoDto(
                 p.getId(),
@@ -101,7 +115,8 @@ public class PartidoService {
                 p.getGolesVisitante(),
                 p.getEstado(),
                 describirEstado(p.getEstado()),
-                ESTADO_POR_JUGAR.equals(p.getEstado()));
+                ESTADO_POR_JUGAR.equals(p.getEstado()),
+                admitePrediccion(p));
     }
 
     /** Las fechas se guardan en UTC; se muestran en la zona horaria configurada (por defecto, Lima). */

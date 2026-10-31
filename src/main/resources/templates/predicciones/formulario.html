@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Nueva predicción')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: cabecera('partidos')}"></header>
+
+<main class="contenedor contenedor--angosto">
+    <div class="titulo-seccion">
+        <div>
+            <h1>Nueva predicción</h1>
+            <p class="subtitulo">
+                Jornada <span th:text="${partido.jornada}">4</span> ·
+                <span th:text="${#temporals.format(partido.fechaHora, 'dd/MM/yyyy HH:mm')}">03/11/2026 15:00</span> (Lima) ·
+                <span th:text="${partido.estadio}">Estadio</span>
+            </p>
+        </div>
+    </div>
+
+    <form class="tarjeta" th:object="${form}" method="post"
+          th:action="@{/partidos/{id}/predicciones(id=${partido.id})}">
+
+        <div class="alerta alerta--error" th:if="${#fields.hasGlobalErrors()}">
+            <p th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p>
+        </div>
+
+        <div class="campo">
+            <label for="autor">Tu nombre</label>
+            <input id="autor" type="text" th:field="*{autor}" maxlength="80" placeholder="Ej. Fabio" autofocus>
+            <span class="error" th:if="${#fields.hasErrors('autor')}" th:errors="*{autor}">Error</span>
+        </div>
+
+        <fieldset class="campo">
+            <legend>¿Quién gana?</legend>
+            <div class="opciones">
+                <label class="opcion">
+                    <input type="radio" th:field="*{resultado}" value="LOCAL">
+                    <span>
+                        <img th:if="${partido.escudoLocal}" th:src="${partido.escudoLocal} + '/tiny'" alt="">
+                        Gana <strong th:text="${partido.equipoLocal}">Local</strong>
+                    </span>
+                </label>
+                <label class="opcion">
+                    <input type="radio" th:field="*{resultado}" value="EMPATE">
+                    <span>Empate</span>
+                </label>
+                <label class="opcion">
+                    <input type="radio" th:field="*{resultado}" value="VISITANTE">
+                    <span>
+                        <img th:if="${partido.escudoVisitante}" th:src="${partido.escudoVisitante} + '/tiny'" alt="">
+                        Gana <strong th:text="${partido.equipoVisitante}">Visitante</strong>
+                    </span>
+                </label>
+            </div>
+            <span class="error" th:if="${#fields.hasErrors('resultado')}" th:errors="*{resultado}">Error</span>
+        </fieldset>
+
+        <fieldset class="campo">
+            <legend>Marcador estimado</legend>
+            <div class="marcador-form">
+                <label class="marcador-form__equipo" for="golesLocal" th:text="${partido.equipoLocal}">Local</label>
+                <input id="golesLocal" type="number" min="0" max="20" th:field="*{golesLocal}">
+                <span class="marcador-form__guion">-</span>
+                <input id="golesVisitante" type="number" min="0" max="20" th:field="*{golesVisitante}">
+                <label class="marcador-form__equipo" for="golesVisitante" th:text="${partido.equipoVisitante}">Visitante</label>
+            </div>
+            <span class="error" th:if="${#fields.hasErrors('golesLocal')}" th:errors="*{golesLocal}">Error</span>
+            <span class="error" th:if="${#fields.hasErrors('golesVisitante')}" th:errors="*{golesVisitante}">Error</span>
+        </fieldset>
+
+        <div class="acciones">
+            <a class="boton boton--secundario" th:href="@{/partidos(jornada=${partido.jornada})}">Cancelar</a>
+            <button type="submit" class="boton">Guardar predicción</button>
+        </div>
+    </form>
+</main>
+</body>
+</html>
