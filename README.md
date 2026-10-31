@@ -23,6 +23,66 @@ Aplicación web en **arquitectura de 3 capas** (Presentación, Lógica de Negoci
 
 ## Arquitectura en capas
 
+```mermaid
+flowchart TB
+    U["Usuario<br/>(navegador web)"]
+
+    subgraph P["1 · CAPA DE PRESENTACIÓN"]
+        V["Vistas Thymeleaf + CSS<br/>partidos/lista<br/>predicciones/formulario<br/>predicciones/lista"]
+        C["Controladores Spring MVC<br/>PartidoController<br/>PrediccionController"]
+        F["Formulario + Bean Validation<br/>PrediccionForm"]
+        EH["Manejo de errores<br/>ManejadorErrores"]
+    end
+
+    subgraph N["2 · CAPA DE NEGOCIO"]
+        CI["Carga inicial al arrancar<br/>CargaInicialPartidos"]
+        S["Servicios<br/>PartidoService<br/>PrediccionService"]
+        D["DTOs<br/>PartidoDto · PrediccionDto<br/>NuevaPrediccion"]
+        EX["Excepciones de negocio<br/>PartidoNoEncontrado<br/>PrediccionInvalida"]
+    end
+
+    subgraph DA["3 · CAPA DE DATOS"]
+        R["Repositorios Spring Data JPA<br/>PartidoRepository<br/>PrediccionRepository"]
+        E["Entidades JPA<br/>Partido · Prediccion"]
+        AC["Cliente API externa<br/>TheSportsDbClient"]
+    end
+
+    DB[("PostgreSQL<br/>tablas partido y prediccion")]
+    API(["TheSportsDB<br/>API pública REST/JSON"])
+
+    U <-->|"HTTP · HTML"| C
+    C -->|"invoca servicios<br/>y recibe DTOs"| S
+    S -->|"usa"| R
+    S -->|"usa"| AC
+    R -->|"JDBC / SQL"| DB
+    AC -->|"HTTPS / JSON"| API
+
+    %% Enlaces invisibles: ubican cada capa en su propia fila
+    U ~~~ V
+    U ~~~ F
+    U ~~~ EH
+    V ~~~ CI
+    F ~~~ D
+    EH ~~~ EX
+    D ~~~ E
+
+    classDef presentacion fill:#e3ecff,stroke:#1d3b8b,color:#0b1e4f
+    classDef negocio fill:#e3f4ea,stroke:#1f8a4c,color:#0f4428
+    classDef datos fill:#fff3dc,stroke:#b26b00,color:#5a3600
+    classDef externo fill:#f1f1f4,stroke:#5d6680,color:#1c2333
+
+    class C,F,V,EH presentacion
+    class CI,S,D,EX negocio
+    class R,E,AC datos
+    class U,DB,API externo
+
+    style P fill:#f4f7ff,stroke:#1d3b8b,stroke-width:2px
+    style N fill:#f3fbf6,stroke:#1f8a4c,stroke-width:2px
+    style DA fill:#fffaf0,stroke:#b26b00,stroke-width:2px
+```
+
+Organización en paquetes:
+
 ```
 com.lab5.champions
 ├── presentation      → Capa de PRESENTACIÓN
@@ -41,7 +101,10 @@ com.lab5.champions
 
 Las dependencias van en un solo sentido: **Presentación → Negocio → Datos**. La presentación nunca accede a entidades, repositorios ni a la API; recibe DTOs de la capa de negocio.
 
-📄 El detalle de cada caso de uso (carga inicial, listado, registro y consulta de predicciones), el modelo de datos y el manejo de errores están en **[docs/flujo-de-datos.md](docs/flujo-de-datos.md)**.
+📄 Documentación detallada:
+
+- **[docs/arquitectura.md](docs/arquitectura.md)**: responsabilidades y tecnologías de cada capa, reglas de dependencia y decisiones de diseño.
+- **[docs/flujo-de-datos.md](docs/flujo-de-datos.md)**: modelo de datos, transformación de los datos entre capas y diagramas de secuencia de cada caso de uso (carga inicial, listado, registro y consulta de predicciones).
 
 ### Reglas de negocio de las predicciones
 
@@ -160,6 +223,7 @@ En Windows se usa `.\mvnw.cmd clean package`.
 ```
 LAB5_1/
 ├── docs/
+│   ├── arquitectura.md          Diagrama y descripción de la arquitectura
 │   └── flujo-de-datos.md        Documentación del flujo de datos
 ├── src/main/java/com/lab5/champions/
 │   ├── presentation/            Capa de presentación
