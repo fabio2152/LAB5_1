@@ -1,0 +1,27 @@
+# Herramientas locales (no versionar)
+.claude/
+CLAUDE.md
+
+# Java / Maven
+target/
+*.class
+*.log
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+
+# Entorno
+.env
+*.env.local
+
+# SO
+.DS_Store
+Thumbs.db
