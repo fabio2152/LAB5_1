@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Partidos')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: cabecera('partidos')}"></header>
+
+<main class="contenedor">
+    <div class="titulo-seccion">
+        <div>
+            <h1>Partidos</h1>
+            <p class="subtitulo">
+                <span th:text="${#lists.size(partidos)}">0</span> partidos almacenados ·
+                <span th:text="${totalPorJugar}">0</span> por jugar ·
+                horario de Lima
+            </p>
+        </div>
+
+        <form class="filtro" th:action="@{/partidos}" method="get">
+            <label for="jornada">Jornada</label>
+            <select id="jornada" name="jornada" onchange="this.form.submit()">
+                <option value="" th:selected="${jornadaSeleccionada == null}">Todas</option>
+                <option th:each="j : ${jornadas}" th:value="${j}" th:text="'Jornada ' + ${j}"
+                        th:selected="${j == jornadaSeleccionada}">Jornada 1</option>
+            </select>
+            <noscript><button type="submit" class="boton">Filtrar</button></noscript>
+        </form>
+    </div>
+
+    <div class="vacio" th:if="${#lists.isEmpty(partidos)}">
+        No hay partidos almacenados. Se cargan desde TheSportsDB al iniciar la aplicación.
+    </div>
+
+    <div class="tabla-contenedor" th:unless="${#lists.isEmpty(partidos)}">
+        <table class="tabla">
+            <thead>
+            <tr>
+                <th>Jornada</th>
+                <th>Fecha</th>
+                <th class="derecha">Local</th>
+                <th class="centro">Marcador</th>
+                <th>Visitante</th>
+                <th>Estadio</th>
+                <th>Estado</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="p : ${partidos}">
+                <td class="centro" th:text="${p.jornada}">1</td>
+                <td class="fecha">
+                    <span th:text="${p.fechaHora != null} ? ${#temporals.format(p.fechaHora, 'dd/MM/yyyy')} : '-'">01/01/2026</span>
+                    <small th:if="${p.fechaHora != null}" th:text="${#temporals.format(p.fechaHora, 'HH:mm')}">20:00</small>
+                </td>
+                <td class="equipo equipo--local">
+                    <span th:text="${p.equipoLocal}">Local</span>
+                    <img th:if="${p.escudoLocal}" th:src="${p.escudoLocal} + '/tiny'" alt="">
+                </td>
+                <td class="centro">
+                    <span class="marcador" th:if="${p.tieneMarcador()}"
+                          th:text="${p.golesLocal} + ' - ' + ${p.golesVisitante}">0 - 0</span>
+                    <span class="marcador marcador--vacio" th:unless="${p.tieneMarcador()}">vs</span>
+                </td>
+                <td class="equipo">
+                    <img th:if="${p.escudoVisitante}" th:src="${p.escudoVisitante} + '/tiny'" alt="">
+                    <span th:text="${p.equipoVisitante}">Visitante</span>
+                </td>
+                <td class="estadio" th:text="${p.estadio}">Estadio</td>
+                <td>
+                    <span class="estado" th:classappend="${p.porJugar} ? 'estado--pendiente' : 'estado--final'"
+                          th:text="${p.estadoDescripcion}">Por jugar</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${titulo} + ' · Champions League'">Champions League</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+<header th:fragment="cabecera(activo)" class="cabecera">
+    <div class="contenedor cabecera__contenido">
+        <a class="marca" th:href="@{/partidos}">
+            <span class="marca__estrella">★</span>
+            <span>Champions League <small>Partidos y predicciones</small></span>
+        </a>
+        <nav class="menu">
+            <a th:href="@{/partidos}" th:classappend="${activo == 'partidos'} ? 'activo'">Partidos</a>
+        </nav>
+    </div>
+</header>
+</body>
+</html>

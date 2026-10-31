@@ -1,16 +1,20 @@
 package com.lab5.champions.business.service;
 
+import com.lab5.champions.business.dto.PartidoDto;
 import com.lab5.champions.data.entity.Partido;
 import com.lab5.champions.data.external.EventoApi;
 import com.lab5.champions.data.external.TheSportsDbClient;
 import com.lab5.champions.data.repository.PartidoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,13 +29,19 @@ import java.util.stream.Collectors;
 public class PartidoService {
 
     private static final Logger log = LoggerFactory.getLogger(PartidoService.class);
+    /** Código de TheSportsDB para "Not Started". */
+    private static final String ESTADO_POR_JUGAR = "NS";
 
     private final TheSportsDbClient apiClient;
     private final PartidoRepository partidoRepository;
+    private final ZoneId zonaHoraria;
 
-    public PartidoService(TheSportsDbClient apiClient, PartidoRepository partidoRepository) {
+    public PartidoService(TheSportsDbClient apiClient,
+                          PartidoRepository partidoRepository,
+                          @Value("${app.zona-horaria}") String zonaHoraria) {
         this.apiClient = apiClient;
         this.partidoRepository = partidoRepository;
+        this.zonaHoraria = ZoneId.of(zonaHoraria);
     }
 
     /**
@@ -63,8 +73,59 @@ public class PartidoService {
         return aGuardar.size();
     }
 
-    public List<Partido> listarPartidos() {
-        return partidoRepository.findAllByOrderByFechaHoraAsc();
+    /**
+     * Partidos almacenados ordenados por fecha. Si se indica una jornada, solo los de esa jornada.
+     */
+    public List<PartidoDto> listarPartidos(Integer jornada) {
+        List<Partido> partidos = jornada == null
+                ? partidoRepository.findAllByOrderByFechaHoraAsc()
+                : partidoRepository.findByJornadaOrderByFechaHoraAsc(jornada);
+        return partidos.stream().map(this::aDto).toList();
+    }
+
+    public List<Integer> listarJornadas() {
+        return partidoRepository.findJornadas();
+    }
+
+    private PartidoDto aDto(Partido p) {
+        return new PartidoDto(
+                p.getId(),
+                p.getJornada(),
+                p.getEquipoLocal(),
+                p.getEquipoVisitante(),
+                p.getEscudoLocal(),
+                p.getEscudoVisitante(),
+                aZonaLocal(p.getFechaHora()),
+                p.getEstadio(),
+                p.getGolesLocal(),
+                p.getGolesVisitante(),
+                p.getEstado(),
+                describirEstado(p.getEstado()),
+                ESTADO_POR_JUGAR.equals(p.getEstado()));
+    }
+
+    /** Las fechas se guardan en UTC; se muestran en la zona horaria configurada (por defecto, Lima). */
+    private LocalDateTime aZonaLocal(LocalDateTime fechaHoraUtc) {
+        if (fechaHoraUtc == null) {
+            return null;
+        }
+        return fechaHoraUtc.atZone(ZoneOffset.UTC).withZoneSameInstant(zonaHoraria).toLocalDateTime();
+    }
+
+    private static String describirEstado(String estado) {
+        if (estado == null) {
+            return "Sin información";
+        }
+        return switch (estado) {
+            case ESTADO_POR_JUGAR -> "Por jugar";
+            case "FT" -> "Finalizado";
+            case "AET" -> "Final (prórroga)";
+            case "AP", "PEN" -> "Final (penales)";
+            case "1H", "2H", "HT", "ET", "LIVE" -> "En juego";
+            case "PST" -> "Postergado";
+            case "CANC" -> "Cancelado";
+            default -> estado;
+        };
     }
 
     private static void copiarDatos(EventoApi evento, Partido partido) {
