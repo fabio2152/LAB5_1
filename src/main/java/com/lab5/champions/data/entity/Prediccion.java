@@ -14,6 +14,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 /**
  * Predicción registrada por un usuario, asociada a un partido (tabla "prediccion").
@@ -45,13 +46,14 @@ public class Prediccion {
     @Column(name = "goles_visitante", nullable = false)
     private Integer golesVisitante;
 
+    /** Momento del registro en UTC (igual que la fecha de los partidos). */
     @Column(name = "fecha_registro", nullable = false)
     private LocalDateTime fechaRegistro;
 
     @PrePersist
     void alRegistrar() {
         if (fechaRegistro == null) {
-            fechaRegistro = LocalDateTime.now();
+            fechaRegistro = LocalDateTime.now(ZoneOffset.UTC);
         }
     }
 

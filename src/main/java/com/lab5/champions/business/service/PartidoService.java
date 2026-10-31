@@ -20,6 +20,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -32,6 +33,7 @@ public class PartidoService {
     private static final Logger log = LoggerFactory.getLogger(PartidoService.class);
     /** Código de TheSportsDB para "Not Started". */
     private static final String ESTADO_POR_JUGAR = "NS";
+    private static final Set<String> ESTADOS_FINALIZADOS = Set.of("FT", "AET", "AP", "PEN");
 
     private final TheSportsDbClient apiClient;
     private final PartidoRepository partidoRepository;
@@ -119,8 +121,14 @@ public class PartidoService {
                 admitePrediccion(p));
     }
 
+    /** Partido con resultado definitivo (finalizado en tiempo regular, prórroga o penales). */
+    static boolean estaFinalizado(Partido partido) {
+        return ESTADOS_FINALIZADOS.contains(partido.getEstado())
+                && partido.getGolesLocal() != null && partido.getGolesVisitante() != null;
+    }
+
     /** Las fechas se guardan en UTC; se muestran en la zona horaria configurada (por defecto, Lima). */
-    private LocalDateTime aZonaLocal(LocalDateTime fechaHoraUtc) {
+    LocalDateTime aZonaLocal(LocalDateTime fechaHoraUtc) {
         if (fechaHoraUtc == null) {
             return null;
         }

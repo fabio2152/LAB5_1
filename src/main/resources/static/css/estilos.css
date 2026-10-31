@@ -257,6 +257,40 @@ select {
     color: var(--verde);
 }
 
+.estado--fallo {
+    background: #fdecea;
+    color: var(--rojo);
+}
+
+/* --- Listado de predicciones --- */
+.autor {
+    font-weight: 600;
+}
+
+.partido__equipos {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.partido__equipos img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.partido__vs {
+    color: var(--texto-suave);
+    font-weight: 400;
+    margin: 0 2px;
+}
+
+.partido small {
+    color: var(--texto-suave);
+}
+
 .boton--chico {
     padding: 5px 12px;
     font-size: .85rem;

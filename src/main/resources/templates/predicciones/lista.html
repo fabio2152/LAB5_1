@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Predicciones')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: cabecera('predicciones')}"></header>
+
+<main class="contenedor">
+    <div class="titulo-seccion">
+        <div>
+            <h1>Predicciones</h1>
+            <p class="subtitulo">
+                <span th:text="${#lists.size(predicciones)}">0</span> predicciones registradas ·
+                <span th:text="${totalPendientes}">0</span> pendientes de resultado ·
+                horario de Lima
+            </p>
+        </div>
+        <a class="boton" th:href="@{/partidos}">Ir a partidos</a>
+    </div>
+
+    <div class="vacio" th:if="${#lists.isEmpty(predicciones)}">
+        Aún no hay predicciones. Elige un partido por jugar y pulsa <strong>Predecir</strong>.
+    </div>
+
+    <div class="tabla-contenedor" th:unless="${#lists.isEmpty(predicciones)}">
+        <table class="tabla">
+            <thead>
+            <tr>
+                <th>Registrada</th>
+                <th>Autor</th>
+                <th>Partido</th>
+                <th>Pronóstico</th>
+                <th class="centro">Estimado</th>
+                <th class="centro">Real</th>
+                <th>Evaluación</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="pr : ${predicciones}">
+                <td class="fecha">
+                    <span th:text="${#temporals.format(pr.fechaRegistro, 'dd/MM/yyyy')}">31/10/2026</span>
+                    <small th:text="${#temporals.format(pr.fechaRegistro, 'HH:mm')}">10:49</small>
+                </td>
+                <td class="autor" th:text="${pr.autor}">Autor</td>
+                <td class="partido">
+                    <div class="partido__equipos">
+                        <img th:if="${pr.escudoLocal}" th:src="${pr.escudoLocal} + '/tiny'" alt="">
+                        <span th:text="${pr.equipoLocal}">Local</span>
+                        <span class="partido__vs">vs</span>
+                        <img th:if="${pr.escudoVisitante}" th:src="${pr.escudoVisitante} + '/tiny'" alt="">
+                        <span th:text="${pr.equipoVisitante}">Visitante</span>
+                    </div>
+                    <small>
+                        Jornada <span th:text="${pr.jornada}">4</span> ·
+                        <span th:text="${pr.fechaPartido != null} ? ${#temporals.format(pr.fechaPartido, 'dd/MM/yyyy HH:mm')} : '-'">03/11/2026 15:00</span>
+                    </small>
+                </td>
+                <td th:text="${pr.pronostico}">Gana Local</td>
+                <td class="centro">
+                    <span class="marcador" th:text="${pr.golesLocal} + ' - ' + ${pr.golesVisitante}">2 - 1</span>
+                </td>
+                <td class="centro">
+                    <span class="marcador" th:if="${pr.tieneResultadoReal()}"
+                          th:text="${pr.golesRealesLocal} + ' - ' + ${pr.golesRealesVisitante}">2 - 1</span>
+                    <span class="marcador marcador--vacio" th:unless="${pr.tieneResultadoReal()}">—</span>
+                </td>
+                <td>
+                    <span class="estado"
+                          th:classappend="${pr.evaluacion == 'Pendiente'} ? 'estado--pendiente'
+                                         : (${pr.evaluacion == 'Falló'} ? 'estado--fallo' : 'estado--final')"
+                          th:text="${pr.evaluacion}">Pendiente</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

@@ -26,7 +26,10 @@
         </form>
     </div>
 
-    <div class="alerta alerta--exito" th:if="${mensaje}" th:text="${mensaje}">Predicción registrada</div>
+    <div class="alerta alerta--exito" th:if="${mensaje}">
+        <span th:text="${mensaje}">Predicción registrada</span> ·
+        <a th:href="@{/predicciones}">Ver predicciones</a>
+    </div>
     <div class="alerta alerta--error" th:if="${error}" th:text="${error}">Error</div>
 
     <div class="vacio" th:if="${#lists.isEmpty(partidos)}">

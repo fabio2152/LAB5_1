@@ -1,6 +1,7 @@
 package com.lab5.champions.business.service;
 
 import com.lab5.champions.business.dto.NuevaPrediccion;
+import com.lab5.champions.business.dto.PrediccionDto;
 import com.lab5.champions.business.exception.PartidoNoEncontradoException;
 import com.lab5.champions.business.exception.PrediccionInvalidaException;
 import com.lab5.champions.data.entity.Partido;
@@ -11,6 +12,8 @@ import com.lab5.champions.data.repository.PrediccionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * Lógica de negocio de las predicciones: valida y registra la predicción asociada a su partido.
  */
@@ -18,13 +21,26 @@ import org.springframework.transaction.annotation.Transactional;
 public class PrediccionService {
 
     static final int MAX_GOLES = 20;
+    private static final String EVALUACION_PENDIENTE = "Pendiente";
 
     private final PrediccionRepository prediccionRepository;
     private final PartidoRepository partidoRepository;
+    private final PartidoService partidoService;
 
-    public PrediccionService(PrediccionRepository prediccionRepository, PartidoRepository partidoRepository) {
+    public PrediccionService(PrediccionRepository prediccionRepository,
+                             PartidoRepository partidoRepository,
+                             PartidoService partidoService) {
         this.prediccionRepository = prediccionRepository;
         this.partidoRepository = partidoRepository;
+        this.partidoService = partidoService;
+    }
+
+    /** Todas las predicciones registradas, de la más reciente a la más antigua. */
+    @Transactional(readOnly = true)
+    public List<PrediccionDto> listarPredicciones() {
+        return prediccionRepository.findAllByOrderByFechaRegistroDesc().stream()
+                .map(this::aDto)
+                .toList();
     }
 
     /**
@@ -67,6 +83,40 @@ public class PrediccionService {
         prediccion.setGolesLocal(datos.golesLocal());
         prediccion.setGolesVisitante(datos.golesVisitante());
         return prediccionRepository.save(prediccion).getId();
+    }
+
+    private PrediccionDto aDto(Prediccion pr) {
+        Partido p = pr.getPartido();
+        boolean finalizado = PartidoService.estaFinalizado(p);
+        return new PrediccionDto(
+                pr.getId(),
+                pr.getAutor(),
+                partidoService.aZonaLocal(pr.getFechaRegistro()),
+                p.getJornada(),
+                p.getEquipoLocal(),
+                p.getEquipoVisitante(),
+                p.getEscudoLocal(),
+                p.getEscudoVisitante(),
+                partidoService.aZonaLocal(p.getFechaHora()),
+                describir(pr.getResultado(), p),
+                pr.getGolesLocal(),
+                pr.getGolesVisitante(),
+                finalizado ? p.getGolesLocal() : null,
+                finalizado ? p.getGolesVisitante() : null,
+                evaluar(pr, p, finalizado));
+    }
+
+    /** Compara la predicción con el resultado real una vez finalizado el partido. */
+    private static String evaluar(Prediccion pr, Partido p, boolean finalizado) {
+        if (!finalizado) {
+            return EVALUACION_PENDIENTE;
+        }
+        if (pr.getGolesLocal().equals(p.getGolesLocal()) && pr.getGolesVisitante().equals(p.getGolesVisitante())) {
+            return "Marcador exacto";
+        }
+        return pr.getResultado() == resultadoDelMarcador(p.getGolesLocal(), p.getGolesVisitante())
+                ? "Acertó resultado"
+                : "Falló";
     }
 
     private static void validarGoles(Integer goles) {
