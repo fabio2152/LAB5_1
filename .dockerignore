@@ -1,0 +1,17 @@
+# Solo se necesitan pom.xml, el Maven Wrapper y src/ para construir la imagen
+target/
+.git/
+.gitignore
+.gitattributes
+.claude/
+CLAUDE.md
+docs/
+*.md
+.idea/
+.vscode/
+*.iml
+.env
+*.env.local
+Dockerfile
+.dockerignore
+docker-compose*.yml
