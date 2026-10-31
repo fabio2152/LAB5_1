@@ -1,0 +1,55 @@
+# Aplicación Champions League + PostgreSQL
+#
+# Uso:
+#   1. Copiar .env.example a .env y definir DB_PASSWORD
+#   2. docker compose up -d --build
+#   3. Abrir http://localhost:8080
+#
+# Las variables se leen del archivo .env (que no se sube al repositorio).
+
+name: lab5-champions
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: ${DB_NAME:-champions}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en el archivo .env}
+    volumes:
+      # Persistencia: los datos sobreviven a "docker compose down" y a recrear el contenedor.
+      # Desde PostgreSQL 18 el volumen se monta en /var/lib/postgresql (no en .../data).
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    # Sin "ports": la base de datos solo es accesible desde la red interna de Compose.
+
+  app:
+    build: .
+    image: ${APP_IMAGE:-lab5-champions:local}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-champions}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en el archivo .env}
+      APP_TIMEZONE: ${APP_TIMEZONE:-America/Lima}
+      SPORTSDB_API_KEY: ${SPORTSDB_API_KEY:-123}
+      SPORTSDB_LEAGUE_ID: ${SPORTSDB_LEAGUE_ID:-4480}
+      SPORTSDB_SEASON: ${SPORTSDB_SEASON:-2026-2027}
+      SPORTSDB_ROUNDS: ${SPORTSDB_ROUNDS:-1,2,3,4,5,6,7,8}
+      SPORTSDB_DELAY_MS: ${SPORTSDB_DELAY_MS:-3000}
+      SPORTSDB_SYNC_ON_STARTUP: ${SPORTSDB_SYNC_ON_STARTUP:-true}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    restart: unless-stopped
+
+volumes:
+  pgdata:

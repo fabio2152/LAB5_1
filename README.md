@@ -194,7 +194,60 @@ java -jar target/champions-0.0.1-SNAPSHOT.jar
 
 En Windows se usa `.\mvnw.cmd clean package`.
 
+## Ejecución con Docker
+
+La forma más simple de levantar la aplicación junto con su base de datos. Solo requiere **Docker** (con Docker Compose); no hace falta instalar Java ni PostgreSQL.
+
+| Archivo | Contenido |
+|---|---|
+| [`Dockerfile`](Dockerfile) | Imagen multi-stage: compila con JDK 21 + Maven Wrapper y ejecuta con JRE 21 Alpine, con un usuario sin privilegios |
+| [`docker-compose.yml`](docker-compose.yml) | Servicios `app` (la aplicación) y `db` (PostgreSQL 18), con healthcheck y volumen persistente |
+| [`.env.example`](.env.example) | Plantilla de variables de entorno |
+
+### 1. Crear el archivo `.env`
+
+**Windows (PowerShell):**
+
+```powershell
+Copy-Item .env.example .env
+```
+
+**Linux / macOS:**
+
+```bash
+cp .env.example .env
+```
+
+Edita `.env` y define al menos `DB_PASSWORD`. Este archivo **no se sube al repositorio** (está en `.gitignore`). Si falta la contraseña, Compose se detiene con el mensaje *"Define DB_PASSWORD en el archivo .env"*.
+
+### 2. Construir y levantar
+
+```bash
+docker compose up -d --build
+```
+
+- Primero arranca `db`. La aplicación espera a que PostgreSQL esté listo (`healthcheck` con `pg_isready`) y luego carga los partidos desde la API.
+- La base de datos no publica su puerto: solo es accesible desde la red interna de Compose.
+
+Abrir 👉 **http://localhost:8080** (o el puerto definido en `APP_PORT`).
+
+### 3. Comandos útiles
+
+| Acción | Comando |
+|---|---|
+| Ver el estado de los servicios | `docker compose ps` |
+| Ver los logs de la aplicación | `docker compose logs -f app` |
+| Consultar la base de datos | `docker compose exec db psql -U postgres -d champions` |
+| Detener y eliminar los contenedores (**los datos se conservan**) | `docker compose down` |
+| Eliminar también los datos (volumen) | `docker compose down -v` |
+
+### Persistencia
+
+Los datos de PostgreSQL se guardan en el volumen Docker **`lab5-champions_pgdata`**, montado en `/var/lib/postgresql`. A partir de PostgreSQL 18 esa es la ruta correcta; la clásica `/var/lib/postgresql/data` ya no aplica. Los partidos y predicciones **sobreviven a `docker compose down`** y a la recreación de los contenedores; solo se borran con `docker compose down -v`.
+
 ## Variables de entorno
+
+En ejecución local se definen en la terminal. Con Docker Compose se definen en el archivo `.env`, salvo `DB_HOST` y `DB_PORT`, que Compose fija a `db` y `5432`.
 
 | Variable | Valor por defecto | Descripción |
 |---|---|---|
@@ -205,6 +258,7 @@ En Windows se usa `.\mvnw.cmd clean package`.
 | `DB_PASSWORD` | *(vacío)* | Contraseña de PostgreSQL |
 | `APP_PORT` | `8080` | Puerto HTTP de la aplicación |
 | `APP_TIMEZONE` | `America/Lima` | Zona horaria en que se muestran las fechas (en la BD se guardan en UTC) |
+| `APP_IMAGE` | `lab5-champions:local` | Solo Docker Compose: nombre de la imagen de la aplicación |
 | `SPORTSDB_API_KEY` | `123` | Clave de TheSportsDB (`123` es la clave gratuita pública) |
 | `SPORTSDB_LEAGUE_ID` | `4480` | Liga a consultar (4480 = UEFA Champions League) |
 | `SPORTSDB_SEASON` | `2026-2027` | Temporada |
@@ -234,6 +288,9 @@ LAB5_1/
 │   ├── templates/               Vistas Thymeleaf
 │   ├── static/css/              Estilos
 │   └── application.properties   Configuración (lee las variables de entorno)
+├── Dockerfile                   Imagen de la aplicación (multi-stage)
+├── docker-compose.yml           Aplicación + PostgreSQL con volumen persistente
+├── .env.example                 Plantilla de variables de entorno
 ├── mvnw, mvnw.cmd, .mvn/        Maven Wrapper
 └── pom.xml
 ```
